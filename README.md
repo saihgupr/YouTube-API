@@ -1,5 +1,7 @@
 # YouTube API Project
 
+![Screenshot](https://i.imgur.com/0q1LvOP.png)
+
 This is a simple web project that demonstrates interaction with the YouTube Data API v3.
 
 ## Setup
