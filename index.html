@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Channel Video IDs</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Channel Video IDs</h1>
+        <div class="input-group">
+            <label for="channelId">Channel ID:</label>
+            <input type="text" id="channelId" placeholder="Enter the YouTube Channel ID">
+        </div>
+        <div class="input-group">
+            <label for="order">Order:</label>
+            <select id="order">
+                <option value="date">Newest to Oldest</option>
+                <option value="date_asc">Oldest to Newest</option>
+                <option value="random">Random</option>
+            </select>
+        </div>
+        <button id="getVideosBtn">Get Video IDs</button>
+        <div class="output-group">
+            <label for="videoIds">Video IDs:</label>
+            <textarea id="videoIds" readonly></textarea>
+        </div>
+        <div id="loading" class="loading" style="display: none;">Fetching videos...</div>
+    </div>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
