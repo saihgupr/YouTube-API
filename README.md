@@ -26,4 +26,4 @@ This is a simple web project that demonstrates interaction with the YouTube Data
 
 Open `index.html` in your web browser to use the application.
 
-![Screenshot](https://i.imgur.com/0q1LvOP.png)
+![Screenshot](https://i.imgur.com/HXepnjC.png)
