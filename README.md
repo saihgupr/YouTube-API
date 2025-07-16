@@ -4,6 +4,8 @@
 
 This is a simple web project that demonstrates interaction with the YouTube Data API v3.
 
+![Screenshot](https://i.imgur.com/HXepnjC.png)
+
 ## Setup
 
 1.  **Clone the repository:**
@@ -26,4 +28,4 @@ This is a simple web project that demonstrates interaction with the YouTube Data
 
 Open `index.html` in your web browser to use the application.
 
-![Screenshot](https://i.imgur.com/HXepnjC.png)
+
