@@ -1,6 +1,6 @@
 # YouTube API Project
 
-![Screenshot](https://i.imgur.com/0q1LvOP.png)
+
 
 This is a simple web project that demonstrates interaction with the YouTube Data API v3.
 
@@ -25,3 +25,5 @@ This is a simple web project that demonstrates interaction with the YouTube Data
 ## Usage
 
 Open `index.html` in your web browser to use the application.
+
+![Screenshot](https://i.imgur.com/0q1LvOP.png)
