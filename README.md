@@ -16,8 +16,8 @@ This is a simple web project that demonstrates interaction with the YouTube Data
     *   Random
     *   Year in Title (Oldest to Newest): Sorts videos based on a four-digit year found in their title.
     *   Year in Title (Newest to Oldest): Sorts videos based on a four-digit year found in their title.
-*   **Copy for iOS:** Generate a `uiopen` URL for iOS devices to play the video list.
-*   **Open on Desktop:** Directly open the generated video list URL in a new browser tab for desktop viewing.
+*   **Copy for iOS:** Copies the YouTube video list URL to the clipboard, which can then be used on iOS devices.
+*   **Open on Desktop:** Directly opens the generated YouTube video list URL in a new browser tab for desktop viewing.
 *   **Non-Intrusive Messages:** User feedback messages are displayed directly on the page without disruptive pop-ups.
 
 ## Setup
