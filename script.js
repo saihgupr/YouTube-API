@@ -115,4 +115,37 @@ document.addEventListener('DOMContentLoaded', () => {
             LOADING_DIV.style.display = 'none';
         }
     });
+
+    const COPY_IOS_URL_BTN = document.getElementById('copyIosUrlBtn');
+    const COPY_DESKTOP_URL_BTN = document.getElementById('copyDesktopUrlBtn');
+
+    async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('URL copied to clipboard!');
+        } catch (err) {
+            console.error('Failed to copy: ', err);
+            alert('Failed to copy URL. Please copy manually.');
+        }
+    }
+
+    COPY_IOS_URL_BTN.addEventListener('click', () => {
+        const videoIds = VIDEO_IDS_TEXTAREA.value;
+        if (videoIds) {
+            const iosUrl = `uiopen https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
+            copyToClipboard(iosUrl);
+        } else {
+            alert('No video IDs to copy.');
+        }
+    });
+
+    COPY_DESKTOP_URL_BTN.addEventListener('click', () => {
+        const videoIds = VIDEO_IDS_TEXTAREA.value;
+        if (videoIds) {
+            const desktopUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
+            copyToClipboard(desktopUrl);
+        } else {
+            alert('No video IDs to copy.');
+        }
+    });
 });
