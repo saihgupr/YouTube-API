@@ -2,11 +2,56 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded and parsed');
 
     const CHANNEL_ID_INPUT = document.getElementById('channelId');
+    const CHANNEL_NAME_INPUT = document.getElementById('channelName');
+    const SEARCH_CHANNEL_BTN = document.getElementById('searchChannelBtn');
+
+    SEARCH_CHANNEL_BTN.addEventListener('click', async () => {
+        const apiKey = YOUTUBE_API_KEY;
+        const channelName = CHANNEL_NAME_INPUT.value;
+
+        if (!apiKey || !channelName) {
+            displayMessage('Please enter both an API key and a channel name.', 'error');
+            return;
+        }
+
+        LOADING_DIV.style.display = 'block';
+        CHANNEL_ID_INPUT.value = ''; // Clear previous channel ID
+
+        try {
+            const searchApiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(channelName)}&type=channel&key=${apiKey}`;
+            const searchResponse = await fetch(searchApiUrl);
+            const searchData = await searchResponse.json();
+
+            if (searchData.items && searchData.items.length > 0) {
+                const channelId = searchData.items[0].id.channelId;
+                CHANNEL_ID_INPUT.value = channelId;
+                displayMessage(`Found channel: ${searchData.items[0].snippet.title} (ID: ${channelId})`);
+            } else {
+                displayMessage('No channel found with that name.', 'error');
+            }
+        } catch (error) {
+            console.error('Error searching for channel:', error);
+            displayMessage(`Error searching for channel: ${error.message}`, 'error');
+        } finally {
+            LOADING_DIV.style.display = 'none';
+        }
+    });
     const ORDER_SELECT = document.getElementById('order');
+    const KEYWORD_FILTER_INPUT = document.getElementById('keywordFilter');
+    const MIN_DURATION_INPUT = document.getElementById('minDuration');
     const GET_VIDEOS_BTN = document.getElementById('getVideosBtn');
     const VIDEO_IDS_TEXTAREA = document.getElementById('videoIds');
     const LOADING_DIV = document.getElementById('loading');
     const YOUTUBE_SHORTS_TOGGLE = document.getElementById('youtubeShortsToggle');
+    const MESSAGE_AREA = document.getElementById('messageArea');
+
+    function displayMessage(message, type = 'success') {
+        MESSAGE_AREA.textContent = message;
+        MESSAGE_AREA.className = `message-area show ${type}`;
+        setTimeout(() => {
+            MESSAGE_AREA.classList.remove('show');
+        }, 3000); // Message fades out after 3 seconds
+    }
 
     if (!GET_VIDEOS_BTN) {
         console.error('Could not find the "Get Video IDs" button.');
@@ -20,9 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const channelId = CHANNEL_ID_INPUT.value;
         const order = ORDER_SELECT.value;
         const includeShorts = YOUTUBE_SHORTS_TOGGLE.checked; // Get the state of the toggle
+        const keyword = KEYWORD_FILTER_INPUT.value.toLowerCase(); // Get the keyword and convert to lowercase
+        const minDurationMinutes = parseFloat(MIN_DURATION_INPUT.value); // Get minimum duration in minutes
 
         if (!apiKey || !channelId) {
-            alert('Please enter both an API key and a channel ID.');
+            displayMessage('Please enter both an API key and a channel ID.', 'error');
             console.warn('API Key or Channel ID is missing.');
             return;
         }
@@ -72,51 +119,89 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Next page token:', nextPageToken);
             }
 
-            // 3. Fetch video details to filter by duration (or not, based on toggle)
-            console.log('Fetching video details for duration filtering...');
-            let finalVideoIds = []; // Renamed from filteredVideoIds to avoid confusion
+            // 3. Fetch video details to filter by duration (or not, based on toggle) and get snippet
+            console.log('Fetching video details for duration filtering and snippet...');
+            let finalVideos = []; // Store full video objects now
             for (let i = 0; i < allVideoIds.length; i += 50) {
                 const videoIdChunk = allVideoIds.slice(i, i + 50);
-                const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoIdChunk.join(',')}&key=${apiKey}`;
+                const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIdChunk.join(',')}&key=${apiKey}`;
                 console.log('Fetching video details from:', videoDetailsApiUrl);
                 const videoDetailsResponse = await fetch(videoDetailsApiUrl);
                 const videoDetailsData = await videoDetailsResponse.json();
                 console.log('Video details received:', videoDetailsData);
 
                 const videosToProcess = videoDetailsData.items.filter(item => {
-                    if (includeShorts) {
-                        return true; // Include all videos if toggle is on
-                    } else {
-                        // Filter out shorts if toggle is off (default behavior)
-                        const duration = item.contentDetails.duration;
-                        const match = duration.match(/PT(\d+M)?(\d+S)?/);
-                        const minutes = (parseInt(match[1]) || 0);
-                        const seconds = (parseInt(match[2]) || 0);
-                        return (minutes * 60 + seconds) > 60;
-                    }
-                }).map(item => item.id);
+                    const duration = item.contentDetails.duration;
+                    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+                    const hours = (parseInt(match[1]) || 0);
+                    const minutes = (parseInt(match[2]) || 0);
+                    const seconds = (parseInt(match[3]) || 0);
+                    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
-                finalVideoIds.push(...videosToProcess);
+                    const isShort = totalSeconds <= 60; // YouTube Shorts are typically 60 seconds or less
+
+                    // Apply YouTube Shorts filter
+                    if (!includeShorts && isShort) {
+                        return false; // Exclude shorts if toggle is off
+                    }
+
+                    // Apply minimum duration filter
+                    if (!isNaN(minDurationMinutes) && totalSeconds < (minDurationMinutes * 60)) {
+                        return false; // Exclude if shorter than minDuration
+                    }
+
+                    return true;
+                });
+
+                finalVideos.push(...videosToProcess);
+            }
+
+            // Apply keyword filter if provided
+            let filteredByKeywordVideos = finalVideos;
+            if (keyword) {
+                filteredByKeywordVideos = finalVideos.filter(video => {
+                    const title = video.snippet.title.toLowerCase();
+                    const description = video.snippet.description.toLowerCase();
+                    return title.includes(keyword) || description.includes(keyword);
+                });
             }
 
             // 4. Sort the video IDs if requested
             if (order === 'date_asc') {
                 console.log('Sorting videos oldest to newest.');
-                finalVideoIds.reverse();
+                filteredByKeywordVideos.reverse();
             } else if (order === 'random') {
                 console.log('Shuffling videos randomly.');
-                for (let i = finalVideoIds.length - 1; i > 0; i--) {
+                for (let i = filteredByKeywordVideos.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
-                    [finalVideoIds[i], finalVideoIds[j]] = [finalVideoIds[j], finalVideoIds[i]];
+                    [filteredByKeywordVideos[i], filteredByKeywordVideos[j]] = [filteredByKeywordVideos[j], filteredByKeywordVideos[i]];
                 }
+            } else if (order === 'year_in_title_asc') {
+                console.log('Sorting videos by year in title (oldest to newest).');
+                filteredByKeywordVideos.sort((a, b) => {
+                    const yearA = getYearFromTitle(a.snippet.title);
+                    const yearB = getYearFromTitle(b.snippet.title);
+                    return yearA - yearB;
+                });
+            } else if (order === 'year_in_title_desc') {
+                console.log('Sorting videos by year in title (newest to oldest).');
+                filteredByKeywordVideos.sort((a, b) => {
+                    const yearA = getYearFromTitle(a.snippet.title);
+                    const yearB = getYearFromTitle(b.snippet.title);
+                    return yearB - yearA;
+                });
             }
 
-            console.log('Total videos found:', finalVideoIds.length);
-            VIDEO_IDS_TEXTAREA.value = finalVideoIds.join(',');
+            console.log('Total videos found:', filteredByKeywordVideos.length);
+
+            // Limit to 50 videos for display and URL
+            const videosToDisplay = filteredByKeywordVideos.slice(0, 50);
+
+            VIDEO_IDS_TEXTAREA.value = videosToDisplay.map(video => video.id).join(',');
 
         } catch (error) {
             console.error('An error occurred during the fetch process:', error);
-            alert(`An error occurred: ${error.message}`);
+            displayMessage(`An error occurred: ${error.message}`, 'error');
         } finally {
             console.log('Process finished.');
             LOADING_DIV.style.display = 'none';
@@ -126,13 +211,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const COPY_IOS_URL_BTN = document.getElementById('copyIosUrlBtn');
     const COPY_DESKTOP_URL_BTN = document.getElementById('copyDesktopUrlBtn');
 
+    function getYearFromTitle(title) {
+        const match = title.match(/\b(19|20)\d{2}\b/);
+        return match ? parseInt(match[0], 10) : Infinity; // Return Infinity if no year found
+    }
+
     async function copyToClipboard(text) {
         try {
             await navigator.clipboard.writeText(text);
-            alert('URL copied to clipboard!');
+            displayMessage('URL copied to clipboard!');
         } catch (err) {
-            console.error('Failed to copy: ', err);
-            alert('Failed to copy URL. Please copy manually.');
+            displayMessage('Failed to copy URL. Please copy manually.', 'error');
         }
     }
 
@@ -142,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const iosUrl = `uiopen https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
             copyToClipboard(iosUrl);
         } else {
-            alert('No video IDs to copy.');
+            displayMessage('No video IDs to copy.', 'error');
         }
     });
 
@@ -150,9 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const videoIds = VIDEO_IDS_TEXTAREA.value;
         if (videoIds) {
             const desktopUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
-            copyToClipboard(desktopUrl);
+            window.open(desktopUrl, '_blank');
         } else {
-            alert('No video IDs to copy.');
+            displayMessage('No video IDs to open.', 'error');
         }
     });
 });

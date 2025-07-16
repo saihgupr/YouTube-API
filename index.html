@@ -9,6 +9,12 @@
 <body>
     <div class="container">
         <h1>YouTube Channel Video IDs</h1>
+        <div id="messageArea" class="message-area"></div>
+        <div class="input-group">
+            <label for="channelName">Channel Name:</label>
+            <input type="text" id="channelName" placeholder="Enter YouTube Channel Name">
+            <button id="searchChannelBtn">Search Channel</button>
+        </div>
         <div class="input-group">
             <label for="channelId">Channel ID:</label>
             <input type="text" id="channelId" placeholder="Enter the YouTube Channel ID">
@@ -19,7 +25,17 @@
                 <option value="date">Newest to Oldest</option>
                 <option value="date_asc">Oldest to Newest</option>
                 <option value="random">Random</option>
+                <option value="year_in_title_asc">Year in Title (Oldest to Newest)</option>
+                <option value="year_in_title_desc">Year in Title (Newest to Oldest)</option>
             </select>
+        </div>
+        <div class="input-group">
+            <label for="keywordFilter">Keyword Filter:</label>
+            <input type="text" id="keywordFilter" placeholder="Filter by keyword in title/description">
+        </div>
+        <div class="input-group">
+            <label for="minDuration">Minimum Duration (minutes):</label>
+            <input type="number" id="minDuration" placeholder="e.g., 5 for 5 minutes">
         </div>
         <div class="input-group toggle-group">
             <label for="youtubeShortsToggle">YouTube Shorts</label>
@@ -36,7 +52,7 @@
         <div id="loading" class="loading" style="display: none;">Fetching videos...</div>
         <div class="copy-buttons">
             <button id="copyIosUrlBtn">Copy for iOS</button>
-            <button id="copyDesktopUrlBtn">Copy for Desktop</button>
+            <button id="copyDesktopUrlBtn">Open on Desktop</button>
         </div>
         
     </div>
