@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     COPY_IOS_URL_BTN.addEventListener('click', () => {
         const videoIds = VIDEO_IDS_TEXTAREA.value;
         if (videoIds) {
-            const iosUrl = `uiopen https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
+            const iosUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
             copyToClipboard(iosUrl);
         } else {
             displayMessage('No video IDs to copy.', 'error');
