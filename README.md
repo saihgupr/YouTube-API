@@ -1,10 +1,24 @@
 # YouTube API Project
 
-
-
 This is a simple web project that demonstrates interaction with the YouTube Data API v3.
 
 ![Screenshot](https://i.imgur.com/HXepnjC.png)
+
+## Features
+
+*   **Search by Channel Name:** Find YouTube channels by their name and automatically populate the Channel ID.
+*   **Filter by Keyword:** Narrow down video results by searching for keywords in video titles and descriptions.
+*   **Filter by Minimum Duration:** Include only videos that meet a specified minimum duration.
+*   **YouTube Shorts Toggle:** Option to include or exclude YouTube Shorts from the results.
+*   **Custom Sorting Options:**
+    *   Newest to Oldest (default)
+    *   Oldest to Newest
+    *   Random
+    *   Year in Title (Oldest to Newest): Sorts videos based on a four-digit year found in their title.
+    *   Year in Title (Newest to Oldest): Sorts videos based on a four-digit year found in their title.
+*   **Copy for iOS:** Generate a `uiopen` URL for iOS devices to play the video list.
+*   **Open on Desktop:** Directly open the generated video list URL in a new browser tab for desktop viewing.
+*   **Non-Intrusive Messages:** User feedback messages are displayed directly on the page without disruptive pop-ups.
 
 ## Setup
 
@@ -27,5 +41,3 @@ This is a simple web project that demonstrates interaction with the YouTube Data
 ## Usage
 
 Open `index.html` in your web browser to use the application.
-
-
