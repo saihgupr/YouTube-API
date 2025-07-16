@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const GET_VIDEOS_BTN = document.getElementById('getVideosBtn');
     const VIDEO_IDS_TEXTAREA = document.getElementById('videoIds');
     const LOADING_DIV = document.getElementById('loading');
+    const YOUTUBE_SHORTS_TOGGLE = document.getElementById('youtubeShortsToggle');
 
     if (!GET_VIDEOS_BTN) {
         console.error('Could not find the "Get Video IDs" button.');
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const apiKey = YOUTUBE_API_KEY;
         const channelId = CHANNEL_ID_INPUT.value;
         const order = ORDER_SELECT.value;
+        const includeShorts = YOUTUBE_SHORTS_TOGGLE.checked; // Get the state of the toggle
 
         if (!apiKey || !channelId) {
             alert('Please enter both an API key and a channel ID.');
@@ -70,9 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Next page token:', nextPageToken);
             }
 
-            // 3. Fetch video details to filter by duration
+            // 3. Fetch video details to filter by duration (or not, based on toggle)
             console.log('Fetching video details for duration filtering...');
-            let filteredVideoIds = [];
+            let finalVideoIds = []; // Renamed from filteredVideoIds to avoid confusion
             for (let i = 0; i < allVideoIds.length; i += 50) {
                 const videoIdChunk = allVideoIds.slice(i, i + 50);
                 const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoIdChunk.join(',')}&key=${apiKey}`;
@@ -81,31 +83,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 const videoDetailsData = await videoDetailsResponse.json();
                 console.log('Video details received:', videoDetailsData);
 
-                const longVideos = videoDetailsData.items.filter(item => {
-                    const duration = item.contentDetails.duration;
-                    const match = duration.match(/PT(\d+M)?(\d+S)?/);
-                    const minutes = (parseInt(match[1]) || 0);
-                    const seconds = (parseInt(match[2]) || 0);
-                    return (minutes * 60 + seconds) > 60;
+                const videosToProcess = videoDetailsData.items.filter(item => {
+                    if (includeShorts) {
+                        return true; // Include all videos if toggle is on
+                    } else {
+                        // Filter out shorts if toggle is off (default behavior)
+                        const duration = item.contentDetails.duration;
+                        const match = duration.match(/PT(\d+M)?(\d+S)?/);
+                        const minutes = (parseInt(match[1]) || 0);
+                        const seconds = (parseInt(match[2]) || 0);
+                        return (minutes * 60 + seconds) > 60;
+                    }
                 }).map(item => item.id);
 
-                filteredVideoIds.push(...longVideos);
+                finalVideoIds.push(...videosToProcess);
             }
 
             // 4. Sort the video IDs if requested
             if (order === 'date_asc') {
                 console.log('Sorting videos oldest to newest.');
-                filteredVideoIds.reverse();
+                finalVideoIds.reverse();
             } else if (order === 'random') {
                 console.log('Shuffling videos randomly.');
-                for (let i = filteredVideoIds.length - 1; i > 0; i--) {
+                for (let i = finalVideoIds.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
-                    [filteredVideoIds[i], filteredVideoIds[j]] = [filteredVideoIds[j], filteredVideoIds[i]];
+                    [finalVideoIds[i], finalVideoIds[j]] = [finalVideoIds[j], finalVideoIds[i]];
                 }
             }
 
-            console.log('Total videos found:', filteredVideoIds.length);
-            VIDEO_IDS_TEXTAREA.value = filteredVideoIds.join(',');
+            console.log('Total videos found:', finalVideoIds.length);
+            VIDEO_IDS_TEXTAREA.value = finalVideoIds.join(',');
 
         } catch (error) {
             console.error('An error occurred during the fetch process:', error);
